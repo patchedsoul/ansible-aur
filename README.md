@@ -27,12 +27,12 @@ If [cower](https://github.com/falconindy/cower) is available, it will be used to
 
 ```yaml
 # Install package foo
-- packer: name=foo user=someone
+- aur: name=foo user=someone
 
 # Install package foo with a specific download directory
-- packer: name=foo dir=/opt/packages/aur user=someone
+- aur: name=foo dir=/opt/packages/aur user=someone
 
 # Install package foo without checking PGP signature
-- packer: name=foo user=someone skip_pgp=yes
+- aur: name=foo user=someone skip_pgp=yes
 
 ```
