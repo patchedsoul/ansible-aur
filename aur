@@ -111,8 +111,8 @@ def main():
     module = AnsibleModule(
         argument_spec = dict(
             name = dict(required=True),
-            dir  = dict(required=True),
             user = dict(required=True),
+            dir  = dict(),
         ),
         supports_check_mode = True
     )
@@ -130,11 +130,6 @@ def main():
     # Get all the requested package names.
     pkgs = p['name'].split(',')
 
-    # Fail if the specified directory does not exist.
-    dir = os.path.expanduser(p['dir'])
-    if not os.path.exists(dir):
-        module.fail_json(msg="directory %s does not exist" % dir)
-
     # Fail if the specified user does not exist.
     try:
         pwd.getpwnam(p['user'])
@@ -142,6 +137,17 @@ def main():
         module.fail_json(msg="user %s does not exist" % p['user'])
     else:
         user = p['user']
+
+    # If no directory was given, assume the packages should be downloaded to
+    # ~/aur.
+    if not p['dir']:
+        dir = '/home/%s/aur' % user
+    else:
+        dir = os.path.expanduser(p['dir'])
+
+    # Fail if the specified directory does not exist.
+    if not os.path.exists(dir):
+        module.fail_json(msg="directory %s does not exist" % dir)
 
     if module.check_mode:
         check_packages(module, pkgs)

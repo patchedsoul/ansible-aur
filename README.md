@@ -19,13 +19,16 @@ This assumes your target node already has cower installed.
 ### Options
 
 * `name` - required, name of the AUR package to install
-* `dir` - required, name of the directory you want to download AUR packages into
 * `user` - required, name of the user you want to install the package as
+* `dir` - optional, name of the directory you want to download AUR packages into. If this is left blank, the module will try to use `~/aur` for the specified user.
 
 ### Examples
 
 ```yaml
 # Install package foo
-- packer: name=foo dir=/home/someone/aur user=someone
+- packer: name=foo user=someone
+
+# Install package foo with a specific download directory
+- packer: name=foo dir=/opt/packages/aur user=someone
 
 ```
