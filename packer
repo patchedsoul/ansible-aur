@@ -24,21 +24,35 @@
 
 import os
 
+
 def cower_in_path(module):
+    """
+    Determine if cower is available.
+    """
     rc, stdout, stderr = module.run_command('which cower', check_rc=False)
     return rc == 0
 
 
 def pacman_in_path(module):
+    """
+    Determine if pacman is available.
+    """
     rc, stdout, stderr = module.run_command('which pacman', check_rc=False)
     return rc == 0
 
 
 def package_installed(module, pkg):
+    """
+    Determine if a package is already installed.
+    """
     rc, stdout, stderr = module.run_command('pacman -Q %s' % pkg, check_rc=False)
     return rc == 0
 
+
 def check_packages(module, pkgs):
+    """
+    Inform the user what would change if the module were run.
+    """
     would_be_changed = []
 
     for pkg in pkgs:
@@ -51,39 +65,42 @@ def check_packages(module, pkgs):
     else:
         module.exit_json(changed=False, msg='all packages are already installed')
 
-def download_packages(module, pkgs, dir, user):
-    cmd = 'sudo -u %s cower -dqf %s'
 
+def download_packages(module, pkgs, dir, user):
+    """
+    Download the specified packages via cower.
+    """
+    cmd = 'sudo -u %s cower -dqf %s'
     for pkg in pkgs:
+        # If the package is already installed, skip the download.
         if package_installed(module, pkg):
             continue
-
+        # Change into the specified directory for download.
         os.chdir(dir)
-
+        # Attempt to install the package.
         rc, stdout, stderr = module.run_command(cmd % (user, pkg), check_rc=False)
-
         if rc != 0:
             module.fail_json(msg='failed to download package %s, because: %s' % (pkg,stderr))
 
+
 def install_packages(module, pkgs, dir, user):
+    """
+    Install the specified packages via makepkg.
+    """
     num_installed = 0
-
     cmd = 'sudo -u %s makepkg -csri --noconfirm --needed --noprogressbar'
-
-
     for pkg in pkgs:
+        # If the package is already installed, skip the install.
         if package_installed(module, pkg):
             continue
-
+        # Change into the package directory.
         os.chdir(os.path.join(dir, pkg))
-
+        # Attempt to install the directory
         rc, stdout, stderr = module.run_command(cmd % user, check_rc=False)
-
         if rc != 0:
             module.fail_json(msg='failed to install package %s, because: %s' % (pkg,stderr))
-
         num_installed += 1
-
+    # Exit with the number of packages succesfully installed.
     if num_installed > 0:
         module.exit_json(changed=True, msg='installed %s package(s)' % num_installed)
     else:
@@ -100,21 +117,25 @@ def main():
         supports_check_mode = True
     )
 
+    # Fail if cower is not available.
     if not cower_in_path(module):
         module.fail_json(msg="could not locate cower executable")
 
+    # Fail of pacman is not available.
     if not pacman_in_path(module):
         module.fail_json(msg="could not locate pacman executable")
 
     p = module.params
 
+    # Get all the requested package names.
     pkgs = p['name'].split(',')
 
+    # Fail if the specified directory does not exist.
     dir = os.path.expanduser(p['dir'])
-
     if not os.path.exists(dir):
         module.fail_json(msg="directory %s does not exist" % dir)
 
+    # Fail if the specified user does not exist.
     try:
         pwd.getpwnam(p['user'])
     except KeyError:
