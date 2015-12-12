@@ -96,6 +96,8 @@ def install_packages(module, pkgs, dir, user):
     """
     num_installed = 0
     cmd = 'sudo -u %s makepkg -csri --noconfirm --needed --noprogressbar'
+    if module.params['skip_pgp']:
+        cmd += ' --skippgpcheck'
     for pkg in pkgs:
         # If the package is already installed, skip the install.
         if package_installed(module, pkg):
@@ -120,6 +122,7 @@ def main():
             name = dict(required=True),
             user = dict(required=True),
             dir  = dict(),
+            skip_pgp = dict(default=False, type='bool'),
         ),
         supports_check_mode = True
     )

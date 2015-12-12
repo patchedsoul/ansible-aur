@@ -21,6 +21,7 @@ If [cower](https://github.com/falconindy/cower) is available, it will be used to
 * `name` - required, name of the AUR package to install
 * `user` - required, name of the user you want to install the package as
 * `dir` - optional, name of the directory you want to download AUR packages into. If this is left blank, the module will try to use `~/aur` for the specified user.
+* `skip_pgp` - optional, whether makepkg should skip verification of PGP signatures of source files. Defaults to false. This may be useful when installing packages on a target node with no keyring established.
 
 ### Examples
 
@@ -30,5 +31,8 @@ If [cower](https://github.com/falconindy/cower) is available, it will be used to
 
 # Install package foo with a specific download directory
 - packer: name=foo dir=/opt/packages/aur user=someone
+
+# Install package foo without checking PGP signature
+- packer: name=foo user=someone skip_pgp=yes
 
 ```
