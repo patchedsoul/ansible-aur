@@ -25,143 +25,143 @@
 import os
 
 def cower_in_path(module):
-  rc, stdout, stderr = module.run_command('which cower', check_rc=False)
-  return rc == 0
+    rc, stdout, stderr = module.run_command('which cower', check_rc=False)
+    return rc == 0
 
 
 def pacman_in_path(module):
-  rc, stdout, stderr = module.run_command('which pacman', check_rc=False)
-  return rc == 0
+    rc, stdout, stderr = module.run_command('which pacman', check_rc=False)
+    return rc == 0
 
 
 def package_installed(module, pkg):
-  rc, stdout, stderr = module.run_command('pacman -Q %s' % pkg, check_rc=False)
-  return rc == 0
+    rc, stdout, stderr = module.run_command('pacman -Q %s' % pkg, check_rc=False)
+    return rc == 0
 
 def check_packages(module, pkgs, state):
-  would_be_changed = []
+    would_be_changed = []
 
-  for pkg in packages:
-    installed = package_installed(module, pkg)
-    if (state == 'present' and not installed) or (state == 'absent' and installed):
-      would_be_changed.append(pkg)
+    for pkg in packages:
+        installed = package_installed(module, pkg)
+        if (state == 'present' and not installed) or (state == 'absent' and installed):
+            would_be_changed.append(pkg)
 
-  word = 'installed'
-  if state == 'absent':
-    word = 'removed'
+    word = 'installed'
+    if state == 'absent':
+        word = 'removed'
 
-  if would_be_changed:
-    module.exit_json(changed=True, msg='%s package(s) would be %s' % (len(would_be_changed), word))
-  else:
-    module.exit_json(changed=False, msg='all packages are already %s' % word)
+    if would_be_changed:
+        module.exit_json(changed=True, msg='%s package(s) would be %s' % (len(would_be_changed), word))
+    else:
+        module.exit_json(changed=False, msg='all packages are already %s' % word)
 
 def download_packages(module, pkgs, dir, user):
-  cmd = 'sudo -u %s cower -dqf %s'
+    cmd = 'sudo -u %s cower -dqf %s'
 
-  for pkg in pkgs:
-    if package_installed(module, pkg):
-      continue
+    for pkg in pkgs:
+        if package_installed(module, pkg):
+            continue
 
-    os.chdir(dir)
+        os.chdir(dir)
 
-    rc, stdout, stderr = module.run_command(cmd % (user, pkg), check_rc=False)
+        rc, stdout, stderr = module.run_command(cmd % (user, pkg), check_rc=False)
 
-    if rc != 0:
-      module.fail_json(msg='failed to download package %s, because: %s' % (pkg,stderr))
+        if rc != 0:
+            module.fail_json(msg='failed to download package %s, because: %s' % (pkg,stderr))
 
 def install_packages(module, pkgs, dir, user):
-  num_installed = 0
+    num_installed = 0
 
-  cmd = 'sudo -u %s makepkg -csri --noconfirm --needed --noprogressbar'
+    cmd = 'sudo -u %s makepkg -csri --noconfirm --needed --noprogressbar'
 
 
-  for pkg in pkgs:
-    if package_installed(module, pkg):
-      continue
+    for pkg in pkgs:
+        if package_installed(module, pkg):
+            continue
 
-    os.chdir(os.path.join(dir, pkg))
+        os.chdir(os.path.join(dir, pkg))
 
-    rc, stdout, stderr = module.run_command(cmd % user, check_rc=False)
+        rc, stdout, stderr = module.run_command(cmd % user, check_rc=False)
 
-    if rc != 0:
-      module.fail_json(msg='failed to install package %s, because: %s' % (pkg,stderr))
+        if rc != 0:
+            module.fail_json(msg='failed to install package %s, because: %s' % (pkg,stderr))
 
-    num_installed += 1
+        num_installed += 1
 
-  if num_installed > 0:
-    module.exit_json(changed=True, msg='installed %s package(s)' % num_installed)
-  else:
-    module.exit_json(changed=False, msg='all packages were already installed')
+    if num_installed > 0:
+        module.exit_json(changed=True, msg='installed %s package(s)' % num_installed)
+    else:
+        module.exit_json(changed=False, msg='all packages were already installed')
 
 
 def remove_packages(module, pkgs, recurse):
-  num_removed = 0
+    num_removed = 0
 
-  arg = 'R'
-  word = 'remove'
-  if recurse:
-    arg = 'Rs'
-    word = 'recursively remove'
+    arg = 'R'
+    word = 'remove'
+    if recurse:
+        arg = 'Rs'
+        word = 'recursively remove'
 
-  cmd = 'pacman -%s --noconfirm %s'
+    cmd = 'pacman -%s --noconfirm %s'
 
-  for pkg in pkgs:
-    if not package_installed(module, pkg):
-      continue
+    for pkg in pkgs:
+        if not package_installed(module, pkg):
+            continue
 
-    rc, stdout, stderr = module.run_command(cmd % (arg, pkg), check_rc=False)
+        rc, stdout, stderr = module.run_command(cmd % (arg, pkg), check_rc=False)
 
     if rc != 0:
-      module.fail_json(msg='failed to %s package %s because: %s' % (word, pkg, stderr))
+        module.fail_json(msg='failed to %s package %s because: %s' % (word, pkg, stderr))
 
     num_removed += 1
 
-  if num_removed > 0:
-    module.exit_json(changed=True, msg='removed %s package(s)' % num_removed)
-  else:
-    module.exit_json(changed=False, msg='all packages were already removed')
+    if num_removed > 0:
+        module.exit_json(changed=True, msg='removed %s package(s)' % num_removed)
+    else:
+        module.exit_json(changed=False, msg='all packages were already removed')
 
 
 def main():
-  module = AnsibleModule(
-    argument_spec = dict(
-      name         = dict(required=True),
-      dir         = dict(required=True),
-      user         = dict(required=True),
-      state        = dict(default='present', choices=['present','absent']),
-      recurse      = dict(default='no', choices=BOOLEANS, type='bool')
-    ),
-    supports_check_mode = True
-  )
+    module = AnsibleModule(
+        argument_spec = dict(
+            name         = dict(required=True),
+            dir         = dict(required=True),
+            user         = dict(required=True),
+            state        = dict(default='present', choices=['present','absent']),
+            recurse      = dict(default='no', choices=BOOLEANS, type='bool')
+        ),
+        supports_check_mode = True
+    )
 
-  if not cower_in_path(module):
-    module.fail_json(msg="could not locate cower executable")
+    if not cower_in_path(module):
+        module.fail_json(msg="could not locate cower executable")
 
-  if not pacman_in_path(module):
-    module.fail_json(msg="could not locate pacman executable")
+    if not pacman_in_path(module):
+        module.fail_json(msg="could not locate pacman executable")
 
-  p = module.params
+    p = module.params
 
-  pkgs = p['name'].split(',')
+    pkgs = p['name'].split(',')
 
-  dir = os.path.expanduser(p['dir'])
+    dir = os.path.expanduser(p['dir'])
 
-  if not os.path.exists(dir):
-    module.fail_json(msg="directory %s does not exist" % dir)
+    if not os.path.exists(dir):
+        module.fail_json(msg="directory %s does not exist" % dir)
 
-  try:
-    user = pwd.getpwnam(p['user'])
-  except KeyError:
-    module.fail_json(msg="user %s does not exist" % p['user'])
+    try:
+        user = pwd.getpwnam(p['user'])
+    except KeyError:
+        module.fail_json(msg="user %s does not exist" % p['user'])
 
-  if module.check_mode:
-    check_packages(module, pkgs, p['state'])
+    if module.check_mode:
+        check_packages(module, pkgs, p['state'])
 
-  if p['state'] == 'present':
-    download_packages(module, pkgs, dir, user)
-    install_packages(module, pkgs, dir, user)
-  elif p['state'] == 'absent':
-    remove_packages(module, pkgs, p['recurse'])
+    if p['state'] == 'present':
+        download_packages(module, pkgs, dir, user)
+        install_packages(module, pkgs, dir, user)
+    elif p['state'] == 'absent':
+        remove_packages(module, pkgs, p['recurse'])
 
 
 from ansible.module_utils.basic import *
