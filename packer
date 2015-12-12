@@ -38,22 +38,18 @@ def package_installed(module, pkg):
     rc, stdout, stderr = module.run_command('pacman -Q %s' % pkg, check_rc=False)
     return rc == 0
 
-def check_packages(module, pkgs, state):
+def check_packages(module, pkgs):
     would_be_changed = []
 
-    for pkg in packages:
+    for pkg in pkgs:
         installed = package_installed(module, pkg)
-        if (state == 'present' and not installed) or (state == 'absent' and installed):
+        if not installed:
             would_be_changed.append(pkg)
 
-    word = 'installed'
-    if state == 'absent':
-        word = 'removed'
-
     if would_be_changed:
-        module.exit_json(changed=True, msg='%s package(s) would be %s' % (len(would_be_changed), word))
+        module.exit_json(changed=True, msg='%s package(s) would be installed' % (len(would_be_changed)))
     else:
-        module.exit_json(changed=False, msg='all packages are already %s' % word)
+        module.exit_json(changed=False, msg='all packages are already installed')
 
 def download_packages(module, pkgs, dir, user):
     cmd = 'sudo -u %s cower -dqf %s'
@@ -94,42 +90,12 @@ def install_packages(module, pkgs, dir, user):
         module.exit_json(changed=False, msg='all packages were already installed')
 
 
-def remove_packages(module, pkgs, recurse):
-    num_removed = 0
-
-    arg = 'R'
-    word = 'remove'
-    if recurse:
-        arg = 'Rs'
-        word = 'recursively remove'
-
-    cmd = 'pacman -%s --noconfirm %s'
-
-    for pkg in pkgs:
-        if not package_installed(module, pkg):
-            continue
-
-        rc, stdout, stderr = module.run_command(cmd % (arg, pkg), check_rc=False)
-
-    if rc != 0:
-        module.fail_json(msg='failed to %s package %s because: %s' % (word, pkg, stderr))
-
-    num_removed += 1
-
-    if num_removed > 0:
-        module.exit_json(changed=True, msg='removed %s package(s)' % num_removed)
-    else:
-        module.exit_json(changed=False, msg='all packages were already removed')
-
-
 def main():
     module = AnsibleModule(
         argument_spec = dict(
             name         = dict(required=True),
             dir         = dict(required=True),
             user         = dict(required=True),
-            state        = dict(default='present', choices=['present','absent']),
-            recurse      = dict(default='no', choices=BOOLEANS, type='bool')
         ),
         supports_check_mode = True
     )
@@ -155,13 +121,10 @@ def main():
         module.fail_json(msg="user %s does not exist" % p['user'])
 
     if module.check_mode:
-        check_packages(module, pkgs, p['state'])
+        check_packages(module, pkgs)
 
-    if p['state'] == 'present':
-        download_packages(module, pkgs, dir, user)
-        install_packages(module, pkgs, dir, user)
-    elif p['state'] == 'absent':
-        remove_packages(module, pkgs, p['recurse'])
+    download_packages(module, pkgs, dir, user)
+    install_packages(module, pkgs, dir, user)
 
 
 from ansible.module_utils.basic import *
