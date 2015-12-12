@@ -116,9 +116,11 @@ def main():
         module.fail_json(msg="directory %s does not exist" % dir)
 
     try:
-        user = pwd.getpwnam(p['user'])
+        pwd.getpwnam(p['user'])
     except KeyError:
         module.fail_json(msg="user %s does not exist" % p['user'])
+    else:
+        user = p['user']
 
     if module.check_mode:
         check_packages(module, pkgs)
