@@ -22,8 +22,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-def packer_in_path(module):
-  rc, stdout, stderr = module.run_command('which packer', check_rc=False)
+import os
+
+def cower_in_path(module):
+  rc, stdout, stderr = module.run_command('which cower', check_rc=False)
   return rc == 0
 
 
@@ -64,18 +66,35 @@ def check_packages(module, pkgs, state):
   else:
     module.exit_json(changed=False, msg='all packages are already %s' % word)
 
-
-def install_packages(module, pkgs):
-  num_installed = 0
-
+def download_packages(module, pkgs, dir):
   sudo_user = get_sudo_user(module)
-  cmd = 'sudo -u %s packer --noconfirm --noedit -S %s'
+  cmd = 'sudo -u %s cower -dqf %s'
 
   for pkg in pkgs:
     if package_installed(module, pkg):
       continue
 
+    os.chdir(dir)
+
     rc, stdout, stderr = module.run_command(cmd % (sudo_user, pkg), check_rc=False)
+
+    if rc != 0:
+      module.fail_json(msg='failed to download package %s, because: %s' % (pkg,stderr))
+
+def install_packages(module, pkgs, dir):
+  num_installed = 0
+
+  sudo_user = get_sudo_user(module)
+  cmd = 'sudo -u %s makepkg -csri --noconfirm --needed --noprogressbar'
+
+
+  for pkg in pkgs:
+    if package_installed(module, pkg):
+      continue
+
+    os.chdir(os.path.join(dir, pkg))
+
+    rc, stdout, stderr = module.run_command(cmd % sudo_user, check_rc=False)
 
     if rc != 0:
       module.fail_json(msg='failed to install package %s, because: %s' % (pkg,stderr))
@@ -120,14 +139,15 @@ def main():
   module = AnsibleModule(
     argument_spec = dict(
       name         = dict(required=True),
+      dir         = dict(required=True),
       state        = dict(default='present', choices=['present','absent']),
       recurse      = dict(default='no', choices=BOOLEANS, type='bool')
     ),
     supports_check_mode = True
   )
 
-  if not packer_in_path(module):
-    module.fail_json(msg="could not locate packer executable")
+  if not cower_in_path(module):
+    module.fail_json(msg="could not locate cower executable")
 
   if not pacman_in_path(module):
     module.fail_json(msg="could not locate pacman executable")
@@ -136,11 +156,17 @@ def main():
 
   pkgs = p['name'].split(',')
 
+  dir = os.path.expanduser(p['dir'])
+
+  if not os.path.exists(dir):
+    module.fail_json(msg="directory %s does not exist" % dir)
+
   if module.check_mode:
     check_packages(module, pkgs, p['state'])
 
   if p['state'] == 'present':
-    install_packages(module, pkgs)
+    download_packages(module, pkgs, dir)
+    install_packages(module, pkgs, dir)
   elif p['state'] == 'absent':
     remove_packages(module, pkgs, p['recurse'])
 
