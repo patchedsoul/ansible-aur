@@ -7,7 +7,7 @@ This assumes your target node already has cower installed.
 ## Dependencies (Managed Node)
 
 * [Arch Linux](https://www.archlinux.org/) (Obviously)
-* [cower][https://github.com/falconindy/cower]
+* [cower](https://github.com/falconindy/cower)
 
 ## Installation
 
