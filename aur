@@ -95,7 +95,7 @@ def install_packages(module, pkgs, dir, user):
     Install the specified packages via makepkg.
     """
     num_installed = 0
-    cmd = 'sudo -u %s makepkg -csri --noconfirm --needed --noprogressbar'
+    cmd = 'sudo -u %s PKGEXT=".pkg.tar" makepkg -csri --noconfirm --needed --noprogressbar'
     if module.params['skip_pgp']:
         cmd += ' --skippgpcheck'
     for pkg in pkgs:
