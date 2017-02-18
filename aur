@@ -23,6 +23,7 @@
 # THE SOFTWARE.
 
 import os
+import platform
 
 
 def cower_in_path(module):
@@ -95,7 +96,12 @@ def install_packages(module, pkgs, dir, user):
     Install the specified packages via makepkg.
     """
     num_installed = 0
-    cmd = 'sudo -u %s PKGEXT=".pkg.tar" makepkg -csri --noconfirm --needed --noprogressbar'
+
+    if platform.machine().startswith('arm'):
+        makepkg_args = '-Acsri'
+    else:
+        makepkg_args = '-csri'
+    cmd = 'sudo -u %s PKGEXT=".pkg.tar" makepkg %s --noconfirm --needed --noprogressbar' % (makepkg_args,)
     if module.params['skip_pgp']:
         cmd += ' --skippgpcheck'
     for pkg in pkgs:
