@@ -151,9 +151,13 @@ def main():
         user = p['user']
 
     # If no directory was given, assume the packages should be downloaded to
-    # ~/aur.
+    # ~user/aur.
     if not p['dir']:
-        dir = '/home/%s/aur' % user
+        dir = os.path.expanduser('~%s/aur' % user)
+        cmd = 'mkdir -p %s && chown -R %s %s' % (dir, user, dir)
+        rc, stdout, stderr = module.run_command(cmd, check_rc=False)
+        if rc != 0:
+            module.fail_json(msg='failed to create directory %s, because: %s' % (dir, stderr))
     else:
         dir = os.path.expanduser(p['dir'])
 
