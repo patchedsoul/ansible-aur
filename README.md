@@ -36,3 +36,15 @@ If [cower](https://github.com/falconindy/cower) is available, it will be used to
 - aur: name=foo user=someone skip_pgp=yes
 
 ```
+
+If you wouldn't like to install AUR packages by normal user, you can create a system user `aurman` (or another one which you like) as AUR manager:
+
+```yaml
+- name: New user for AUR management
+  user:
+    name: aurman
+    comment: "AUR manager"
+    shell: /bin/nologin
+    home: /var/lib/aurman
+    system: yes
+```

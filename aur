@@ -23,6 +23,7 @@
 # THE SOFTWARE.
 
 import os
+import pwd
 import platform
 
 
@@ -151,9 +152,17 @@ def main():
         user = p['user']
 
     # If no directory was given, assume the packages should be downloaded to
-    # ~/aur.
+    # ~user/aur.
     if not p['dir']:
-        dir = '/home/%s/aur' % user
+        home = os.path.expanduser('~%s' % user)
+        if not os.path.exists(home):
+            module.fail_json(msg="%s's home directory %s does not exist" % (user, home))
+
+        dir = os.path.join(home, 'aur')
+        if not os.path.exists(dir):
+            os.makedirs(dir)
+            uid = pwd.getpwnam(user).pw_uid
+            os.chown(dir, uid, -1)
     else:
         dir = os.path.expanduser(p['dir'])
 
