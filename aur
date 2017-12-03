@@ -92,7 +92,7 @@ def download_packages(module, pkgs, dir, user):
                 module.fail_json(msg='failed to download package %s, because: %s' % (pkg,stderr))
 
 
-def install_packages(module, pkgs, dir, user):
+def install_packages(module, pkgs, dir, user, virtual):
     """
     Install the specified packages via makepkg.
     """
@@ -109,8 +109,14 @@ def install_packages(module, pkgs, dir, user):
         # If the package is already installed, skip the install.
         if package_installed(module, pkg):
             continue
+        
         # Change into the package directory.
-        os.chdir(os.path.join(dir, pkg))
+        # Check if the package is a virtual package
+        if virtual:
+            os.chdir(os.path.join(dir, virtual))
+        else:
+            os.chdir(os.path.join(dir, pkg))
+        
         # Attempt to install the directory
         rc, stdout, stderr = module.run_command(cmd, check_rc=False)
         if rc != 0:
@@ -130,6 +136,7 @@ def main():
             user = dict(required=True),
             dir  = dict(),
             skip_pgp = dict(default=False, type='bool'),
+            virtual = dict(),
         ),
         supports_check_mode = True
     )
@@ -174,7 +181,13 @@ def main():
         check_packages(module, pkgs)
 
     download_packages(module, pkgs, dir, user)
-    install_packages(module, pkgs, dir, user)
+    # Check if the package is virtual
+    if p['virtual']:
+        virtual = p['virtual']
+    else:
+        virtual = False
+
+    install_packages(module, pkgs, dir, user, virtual)
 
 
 from ansible.module_utils.basic import *
