@@ -99,9 +99,9 @@ def install_packages(module, pkgs, dir, user, virtual):
     num_installed = 0
 
     if platform.machine().startswith('arm'):
-        makepkg_args = '-Acsri'
+        makepkg_args = '-Acsr'
     else:
-        makepkg_args = '-csri'
+        makepkg_args = '-csr'
     cmd = 'sudo -u %s PKGEXT=".pkg.tar" makepkg %s --noconfirm --needed --noprogressbar' % (user, makepkg_args)
     if module.params['skip_pgp']:
         cmd += ' --skippgpcheck'
@@ -117,11 +117,18 @@ def install_packages(module, pkgs, dir, user, virtual):
         else:
             os.chdir(os.path.join(dir, pkg))
         
-        # Attempt to install the directory
+        # Attempt to build the directory.
         rc, stdout, stderr = module.run_command(cmd, check_rc=False)
         if rc != 0:
+            module.fail_json(msg='failed to build package %s, because: %s' % (pkg,stderr))
+
+        # If the package was succesfully built, install it.
+        rc, stdout, stderr = module.run_command('pacman -U --noconfirm *.pkg.tar*', check_rc=False, use_unsafe_shell=True)
+        if rc != 0:
             module.fail_json(msg='failed to install package %s, because: %s' % (pkg,stderr))
-        num_installed += 1
+        else:
+            num_installed += 1
+
     # Exit with the number of packages succesfully installed.
     if num_installed > 0:
         module.exit_json(changed=True, msg='installed %s package(s)' % num_installed)
