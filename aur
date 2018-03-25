@@ -99,9 +99,9 @@ def install_packages(module, pkgs, dir, user, virtual):
     num_installed = 0
 
     if platform.machine().startswith('arm'):
-        makepkg_args = '-Acsr'
+        makepkg_args = '-Acsrf'
     else:
-        makepkg_args = '-csr'
+        makepkg_args = '-csrf'
     cmd = 'sudo -u %s PKGEXT=".pkg.tar" makepkg %s --noconfirm --needed --noprogressbar' % (user, makepkg_args)
     if module.params['skip_pgp']:
         cmd += ' --skippgpcheck'
