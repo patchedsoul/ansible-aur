@@ -98,7 +98,7 @@ def install_packages(module, pkgs, dir, user, virtual):
     """
     num_installed = 0
 
-    if platform.machine().startswith('arm'):
+    if platform.machine().startswith('arm') or platform.machine().startswith('aarch64'):
         makepkg_args = '-Acsrf'
     else:
         makepkg_args = '-csrf'
