@@ -139,7 +139,7 @@ def install_packages(module, pkgs, dir, user, virtual):
 def main():
     module = AnsibleModule(
         argument_spec = dict(
-            name = dict(required=True),
+            name = dict(required=True, type='list'),
             user = dict(required=True),
             dir  = dict(),
             skip_pgp = dict(default=False, type='bool'),
@@ -155,7 +155,7 @@ def main():
     p = module.params
 
     # Get all the requested package names.
-    pkgs = p['name'].split(',')
+    pkgs = p['name']
 
     # Fail if the specified user does not exist.
     try:
