@@ -1,7 +1,6 @@
 # ansible-aur
 
-An Ansible module for installing [AUR](https://aur.archlinux.org/) packages.
-cURL will be used to download the packages. Packages are installed via [makepkg](https://wiki.archlinux.org/index.php/Makepkg).
+An Ansible module for installing [AUR](https://aur.archlinux.org/) packages. CURL is used to download the packages. Packages are installed via [makepkg](https://wiki.archlinux.org/index.php/Makepkg).
 
 
 ## Installation
