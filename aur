@@ -27,13 +27,6 @@ import pwd
 import platform
 
 
-def cower_in_path(module):
-    """
-    Determine if cower is available.
-    """
-    rc, stdout, stderr = module.run_command('which cower', check_rc=False)
-    return rc == 0
-
 
 def pacman_in_path(module):
     """
@@ -72,12 +65,7 @@ def download_packages(module, pkgs, dir, user):
     """
     Download the specified packages.
     """
-    # Use cower, if available.
-    if cower_in_path(module):
-        cmds = ['sudo -u %s cower -dqf %s', ]
-    # Otherwise, fall back to cURL
-    else:
-        cmds = ['sudo -u %s curl -O https://aur.archlinux.org/cgit/aur.git/snapshot/%s.tar.gz',
+    cmds = ['sudo -u %s curl -O https://aur.archlinux.org/cgit/aur.git/snapshot/%s.tar.gz',
                 'sudo -u %s tar xzf %s.tar.gz']
     for pkg in pkgs:
         # If the package is already installed, skip the download.
