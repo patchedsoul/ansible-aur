@@ -1,13 +1,8 @@
 # ansible-aur
 
 An Ansible module for installing [AUR](https://aur.archlinux.org/) packages.
+cURL will be used to download the packages. Packages are installed via [makepkg](https://wiki.archlinux.org/index.php/Makepkg).
 
-If [cower](https://github.com/falconindy/cower) is available, it will be used to download packages. Otherwise, cURL will be used. Packages are installed via [makepkg](https://wiki.archlinux.org/index.php/Makepkg).
-
-## Dependencies (Managed Node)
-
-* [Arch Linux](https://www.archlinux.org/) (Obviously)
-* [cower](https://github.com/falconindy/cower) (Optional)
 
 ## Installation
 
